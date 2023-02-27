@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart' hide Element;
 import 'package:flutter_chat_types/flutter_chat_types.dart'
     show PreviewData, PreviewDataImage;
@@ -42,14 +43,11 @@ bool _hasUTF8Charset(Document document) {
   return element.attributes['charset']!.toLowerCase() == 'utf-8';
 }
 
-String? _getTitle(Document document) {
-  final titleElements = document.getElementsByTagName('title');
-  if (titleElements.isNotEmpty) return titleElements.first.text;
-
-  return _getMetaContent(document, 'og:title') ??
-      _getMetaContent(document, 'twitter:title') ??
-      _getMetaContent(document, 'og:site_name');
-}
+String? _getTitle(Document document) =>
+    _getMetaContent(document, 'og:title') ??
+    _getMetaContent(document, 'twitter:title') ??
+    _getMetaContent(document, 'og:site_name') ??
+    document.getElementsByTagName('title').firstOrNull?.text;
 
 String? _getDescription(Document document) =>
     _getMetaContent(document, 'og:description') ??
