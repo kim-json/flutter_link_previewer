@@ -54,6 +54,29 @@ String? _getDescription(Document document) =>
     _getMetaContent(document, 'description') ??
     _getMetaContent(document, 'twitter:description');
 
+String? _getDomain(Document document, String url) {
+  try {
+    final domainName = () {
+      final canonicalLink = document.querySelector('link[rel=canonical]');
+      if (canonicalLink != null && canonicalLink.attributes['href'] != null) {
+        return canonicalLink.attributes['href'];
+      }
+      final ogUrlMeta = document.querySelector('meta[property="og:url"]');
+      if (ogUrlMeta != null && ogUrlMeta.text.isNotEmpty) {
+        return ogUrlMeta.text;
+      }
+      return null;
+    }();
+
+    return domainName != null
+        ? Uri.parse(domainName).host.replaceFirst('www.', '')
+        : Uri.parse(url).host.replaceFirst('www.', '');
+  } catch (e) {
+    print('Domain resolution failure Error:$e');
+    return null;
+  }
+}
+
 List<String> _getImageUrls(Document document, String baseUrl) {
   final meta = document.getElementsByTagName('meta');
   var attribute = 'content';
@@ -167,6 +190,7 @@ Future<PreviewData> getPreviewData(
   PreviewDataImage? previewDataImage;
   String? previewDataTitle;
   String? previewDataUrl;
+  String? previewDomain;
 
   try {
     final emailRegexp = RegExp(regexEmail, caseSensitive: false);
@@ -208,7 +232,7 @@ Future<PreviewData> getPreviewData(
       );
       return PreviewData(
         image: previewDataImage,
-        link: previewDataUrl,
+        link: _getDomain(document, previewDataUrl),
       );
     }
 
@@ -246,7 +270,7 @@ Future<PreviewData> getPreviewData(
     return PreviewData(
       description: previewDataDescription,
       image: previewDataImage,
-      link: previewDataUrl,
+      link: _getDomain(document, previewDataUrl),
       title: previewDataTitle,
     );
   } catch (e) {
